@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOL观点立场分布图</title>
+    <!-- 引入ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            min-height: 500px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .chart-title h1 {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .chart-title p {
+            font-size: 12px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        #chart {
+            flex: 1;
+            width: 100%;
+            height: 400px;
+            min-height: 400px;
+        }
+        
+        .footer-note {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                padding: 15px;
+            }
+            
+            #chart {
+                height: 350px;
+            }
+            
+            .chart-title h1 {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .chart-container {
+                padding: 10px;
+            }
+            
+            #chart {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <div class="chart-title">
+            <h1>KOL文本评论中的观点立场分布</h1>
+            <p>支持：87.36% | 反对：7.22% | 中立：5.42%（提及该话题评论占比）</p>
+        </div>
+        <div id="chart"></div>
+        <div class="footer-note">
+            数据来源：KOL评论分析 | 更新日期：2024年
+        </div>
+    </div>
+
+    <script>
+        // 初始化ECharts实例
+        const chartDom = document.getElementById('chart');
+        const myChart = echarts.init(chartDom);
+        
+        // 图表配置
+        const option = {
+            // 已移除title配置，因为在HTML中手动实现了
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    const perTotal = params.data.perTotal || 0;
+                    return `${params.name}：${params.value}条<br>占提及比：${params.percent}%<br>占全量比：${perTotal}%`;
+                }
+            },
+            legend: {
+                top: '8%',
+                left: 'center',
+                textStyle: { 
+                    fontSize: 12, 
+                    color: '#555',
+                    fontFamily: 'Microsoft YaHei'
+                },
+                formatter: function(name) {
+                    const percentMap = {
+                        '支持不婚不育': '87.36%',
+                        '反对不婚不育': '7.22%',
+                        '中立（不婚不育）': '5.42%'
+                    };
+                    return `${name} ${percentMap[name] || ''}`;
+                }
+            },
+            series: [
+                {
+                    name: '观点立场',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['50%', '55%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        // 严格套用指定色号+高级垂直渐变
+                        color: function(params) {
+                            const colorMap = {
+                                '支持不婚不育': new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#f6bec8' },
+                                    { offset: 1, color: 'rgba(246,190,200,0.7)' }
+                                ]),
+                                '反对不婚不育': new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#d5eae1' },
+                                    { offset: 1, color: 'rgba(213,234,225,0.7)' }
+                                ]),
+                                '中立（不婚不育）': new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#fef79c' },
+                                    { offset: 1, color: 'rgba(254,247,156,0.7)' }
+                                ])
+                            };
+                            return colorMap[params.name] || '#ccc';
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        formatter: '{d}%',
+                        fontSize: 11,
+                        color: '#333',
+                        fontFamily: 'Microsoft YaHei'
+                    },
+                    emphasis: {
+                        scale: true,
+                        scaleSize: 10,
+                        label: {
+                            show: true,
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            color: '#333',
+                            formatter: '{d}%'
+                        }
+                    },
+                    labelLine: {
+                        show: true,
+                        length: 15,
+                        length2: 10,
+                        lineStyle: { 
+                            color: '#999',
+                            width: 1
+                        }
+                    },
+                    // 填充数据+计算全量占比（用于tooltip）
+                    data: [
+                        { 
+                            value: 242, 
+                            name: '支持不婚不育', 
+                            perTotal: 33.66,
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(246,190,200,0.3)'
+                            }
+                        },
+                        { 
+                            value: 20, 
+                            name: '反对不婚不育', 
+                            perTotal: 2.78,
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(213,234,225,0.3)'
+                            }
+                        },
+                        { 
+                            value: 15, 
+                            name: '中立（不婚不育）', 
+                            perTotal: 2.09,
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(254,247,156,0.3)'
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // 应用配置
+        myChart.setOption(option);
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>
